@@ -10,7 +10,7 @@ export const userDetailsAPI = createApi({
       query: (userLoginData) => ({
         url: "/user/login",
         method: "POST",
-        credentials: "include",
+        credentials: "include", 
         headers: { "Content-Type": "application/json" },
         body: userLoginData,
       }),
