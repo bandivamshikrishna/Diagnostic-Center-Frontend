@@ -1,7 +1,62 @@
 import { Typography, Box, TextField, Button, Stack } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { useState } from "react";
+import { useLoginUserMutation } from "../redux/apis/UserDetails";
+import { useNavigate } from "react-router";
 
 export const LoginPage = () => {
+  const [userLoginForm, setUserLoginForm] = useState({
+    email: "",
+    password: "",
+  });
+  const [errors, setErrors] = useState({ email: "", password: "" });
+
+  const [loginUser] = useLoginUserMutation();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    let showValidations = false;
+    let newErrors = { email: "", password: "" };
+
+    if (!userLoginForm.email.trim()) {
+      newErrors.email = "Email is requried";
+      showValidations = true;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userLoginForm.email)) {
+      newErrors.email = "Enter a Valid Email";
+      showValidations = true;
+    }
+
+    if (!userLoginForm.password.trim()) {
+      newErrors.password = "Password is required";
+      showValidations = true;
+    }
+
+    if (showValidations) {
+      setErrors(newErrors);
+      return;
+    } else {
+      setErrors({ email: "", password: "" });
+    }
+
+    //Login User
+    try {
+      await loginUser(userLoginForm).unwrap();
+      navigate("/dashboard");
+    } catch (e) {
+      newErrors = { email: "", password: "" };
+
+      if (e?.data?.email) {
+        newErrors.email = e?.data?.email;
+      } else {
+        newErrors.email = e?.data?.message;
+        newErrors.password = e?.data?.message;
+      }
+
+      setErrors(newErrors);
+    }
+  };
+
   return (
     <>
       <Box
@@ -45,12 +100,43 @@ export const LoginPage = () => {
               height="150px"
               width="150px"
             />
-            <Stack spacing={2} width="300px">
-              <TextField label="Email" type="email"></TextField>
-              <TextField label="Password" type="password"></TextField>
+            <Stack
+              spacing={1}
+              width="300px"
+              component="form"
+              onSubmit={handleSubmit}
+              noValidate
+            >
+              <TextField
+                label="Email"
+                type="email"
+                error={!!errors.email}
+                helperText={errors.email}
+                value={userLoginForm.email}
+                onChange={(e) =>
+                  setUserLoginForm({
+                    ...userLoginForm,
+                    email: e.target.value,
+                  })
+                }
+              ></TextField>
+              <TextField
+                label="Password"
+                type="password"
+                error={!!errors.password}
+                helperText={errors.password}
+                value={userLoginForm.password}
+                onChange={(e) =>
+                  setUserLoginForm({
+                    ...userLoginForm,
+                    password: e.target.value,
+                  })
+                }
+              ></TextField>
               <Button
                 variant="contained"
                 sx={{ color: "white", fontWeight: "600" }}
+                type="submit"
               >
                 Login
               </Button>

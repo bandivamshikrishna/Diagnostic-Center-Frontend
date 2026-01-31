@@ -6,14 +6,16 @@ import { CssBaseline } from "@mui/material";
 import { DiagnosticCenterTheme } from "./theme/diagnosticCenterTheme.jsx";
 import "./index.css";
 import App from "./App.jsx";
+import { Provider } from "react-redux";
+import {store} from "./redux/store"
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <BrowserRouter>
-      <ThemeProvider theme={DiagnosticCenterTheme}>
-        <CssBaseline />
+  <BrowserRouter>
+    <ThemeProvider theme={DiagnosticCenterTheme}>
+      <CssBaseline />
+      <Provider store={store}>
         <App />
-      </ThemeProvider>
-    </BrowserRouter>
-  </StrictMode>,
+      </Provider>
+    </ThemeProvider>
+  </BrowserRouter>,
 );
