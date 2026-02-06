@@ -1,7 +1,10 @@
+import { useSelector } from "react-redux";
+
 export const Dashboard = () => {
+  const userEmail = useSelector((state) => state.userDetails.user?.email);
   return (
     <>
-      <h1>Dashborad Page</h1>
+      <p>Dashboard {userEmail}</p>
     </>
   );
 };

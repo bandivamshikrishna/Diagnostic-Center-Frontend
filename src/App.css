@@ -1,0 +1,11 @@
+html,
+body {
+    height: 100%;
+    overflow: auto;
+
+    /* Firefox */
+    scrollbar-width: none;
+
+    /* IE & Edge */
+    -ms-overflow-style: none;
+}

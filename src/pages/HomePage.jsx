@@ -1,5 +1,10 @@
-export const HomePage = () =>{
-    return (
-        <h1>Home Page</h1>
-    );
-}
+import { Header } from "../components/Header";
+
+export const HomePage = () => {
+  return (
+    <>
+      <Header />
+      <h1>Home Page</h1>
+    </>
+  );
+};

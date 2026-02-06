@@ -2,14 +2,23 @@ import { Routes, Route } from "react-router";
 import { HomePage } from "./pages/HomePage";
 import { LoginPage } from "./pages/LoginPage";
 import { Dashboard } from "./pages/Dashboard";
+import { CreateVendor } from "./pages/CreateVendor";
 import "./App.css";
+import { Navbar } from "./components/Navbar";
+import { ProtectedLayout } from "./components/ProtectedLayout";
 
 function App() {
   return (
     <Routes>
       <Route index element={<HomePage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/dashboard" element={<Dashboard />} />
+
+      <Route element={<ProtectedLayout />}>
+        <Route element={<Navbar />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/admin/create-vendor" element={<CreateVendor />} />
+        </Route>
+      </Route>
     </Routes>
   );
 }

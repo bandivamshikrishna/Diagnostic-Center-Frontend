@@ -1,8 +1,9 @@
 import { Typography, Box, TextField, Button, Stack } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useState } from "react";
 import { useLoginUserMutation } from "../redux/apis/UserDetails";
 import { useNavigate } from "react-router";
+import { Header } from "../components/Header";
+import { Loading } from "../components/Loading";
 
 export const LoginPage = () => {
   const [userLoginForm, setUserLoginForm] = useState({
@@ -11,7 +12,7 @@ export const LoginPage = () => {
   });
   const [errors, setErrors] = useState({ email: "", password: "" });
 
-  const [loginUser] = useLoginUserMutation();
+  const [loginUser, { isLoading }] = useLoginUserMutation();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -59,11 +60,14 @@ export const LoginPage = () => {
 
   return (
     <>
+      {isLoading && <Loading />}
+
+      <Header />
       <Box
         display={"flex"}
-        alignItems={"center"}
+        marginTop={5}
         justifyContent={"center"}
-        minHeight="100vh"
+        minHeight="80vh"
       >
         <Box
           bgcolor={"primary.main"}
@@ -102,7 +106,7 @@ export const LoginPage = () => {
             />
             <Stack
               spacing={1}
-              width="300px"
+              width="70%"
               component="form"
               onSubmit={handleSubmit}
               noValidate
@@ -137,6 +141,7 @@ export const LoginPage = () => {
                 variant="contained"
                 sx={{ color: "white", fontWeight: "600" }}
                 type="submit"
+                disabled={isLoading}
               >
                 Login
               </Button>
