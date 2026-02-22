@@ -53,6 +53,8 @@ export const ProtectedLayout = () => {
       dispatch(setUserDetails(data));
     } else if ((isError && error?.status == "403") || !accessToken) {
       handleRefresh();
+    } else if (isError) {
+      console.log("The error is ", error);
     }
   }, [
     dispatch,

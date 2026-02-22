@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 export const VendorAPI = createApi({
   reducerPath: "VendorAPI",
@@ -7,15 +7,17 @@ export const VendorAPI = createApi({
   }),
   endpoints: (builder) => ({
     createVendor: builder.mutation({
-      query: (createVendorData) => ({
+      query: (createVendorFormData) => ({
         url: "/vendor",
         method: "POST",
         credentials: "include",
-        body: createVendorData,
+        body: createVendorFormData,
+        headers: {
+          Authorization: localStorage.getItem("accessToken"),
+        },
       }),
     }),
   }),
 });
 
 export const { useCreateVendorMutation } = VendorAPI;
-    
