@@ -211,6 +211,9 @@ export function Navbar() {
             <SideBarBtn label={"Add Vendor"} link={"/admin/create-vendor"}>
               <AddCircleIcon />
             </SideBarBtn>
+            <SideBarBtn label={"Vendors"} link={"/admin/vendor"}>
+              <AddCircleIcon />
+            </SideBarBtn>
           </List>
         </Drawer>
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>

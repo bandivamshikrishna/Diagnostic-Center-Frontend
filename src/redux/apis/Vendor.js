@@ -17,7 +17,29 @@ export const VendorAPI = createApi({
         },
       }),
     }),
+
+    getAllVendors: builder.query({
+      query: () => ({
+        url: "/vendor",
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Authorization: localStorage.getItem("accessToken"),
+        },
+      }),
+    }),
+
+    getSpecificVendorDetails: builder.query({
+      query: (id) => ({
+        url: `/vendor/${id}`,
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Authorization: localStorage.getItem("accessToken"),
+        },
+      }),
+    }),
   }),
 });
 
-export const { useCreateVendorMutation } = VendorAPI;
+export const { useCreateVendorMutation, useGetAllVendorsQuery, useGetSpecificVendorDetailsQuery } = VendorAPI;
