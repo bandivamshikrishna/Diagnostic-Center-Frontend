@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { v4 as createUuid } from "uuid";
 
 export const userDetailsAPI = createApi({
   reducerPath: "userDetailsAPI",
@@ -11,7 +12,7 @@ export const userDetailsAPI = createApi({
         url: "/user/login",
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", uuid: createUuid() },
         body: userLoginData,
       }),
       transformResponse: async (response, meta) => {
@@ -26,6 +27,7 @@ export const userDetailsAPI = createApi({
         credentials: "include",
         headers: {
           Authorization: localStorage.getItem("accessToken"),
+          uuid: createUuid(),
         },
       }),
     }),
@@ -49,6 +51,7 @@ export const userDetailsAPI = createApi({
         credentials: "include",
         headers: {
           Authorization: localStorage.getItem("accessToken"),
+          uuid: createUuid(),
         },
       }),
     }),

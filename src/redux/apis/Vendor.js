@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { v4 as createUuid } from "uuid";
 
 export const VendorAPI = createApi({
   reducerPath: "VendorAPI",
@@ -14,6 +15,7 @@ export const VendorAPI = createApi({
         body: createVendorFormData,
         headers: {
           Authorization: localStorage.getItem("accessToken"),
+          uuid: createUuid(),
         },
       }),
     }),
@@ -25,6 +27,7 @@ export const VendorAPI = createApi({
         credentials: "include",
         headers: {
           Authorization: localStorage.getItem("accessToken"),
+          uuid: createUuid(),
         },
       }),
     }),
@@ -36,10 +39,15 @@ export const VendorAPI = createApi({
         credentials: "include",
         headers: {
           Authorization: localStorage.getItem("accessToken"),
+          uuid: createUuid(),
         },
       }),
     }),
   }),
 });
 
-export const { useCreateVendorMutation, useGetAllVendorsQuery, useGetSpecificVendorDetailsQuery } = VendorAPI;
+export const {
+  useCreateVendorMutation,
+  useGetAllVendorsQuery,
+  useGetSpecificVendorDetailsQuery,
+} = VendorAPI;

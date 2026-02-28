@@ -14,6 +14,7 @@ import { Loading } from "../components/Loading";
 import IconButton from "@mui/material/IconButton";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { Navigate, useNavigate } from "react-router";
+import { ErrorDialog } from "../components/ErrorDialog";
 
 export const Vendor = () => {
   const { data = [], isLoading } = useGetAllVendorsQuery();
@@ -22,6 +23,7 @@ export const Vendor = () => {
   const viewSpecificVendor = (id) => {
     navigate(`/admin/vendor/${id}`);
   };
+
   return (
     <>
       {isLoading && <Loading />}
