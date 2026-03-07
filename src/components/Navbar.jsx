@@ -15,13 +15,14 @@ import { Avatar, Menu, MenuItem } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
 import { useEffect, useState } from "react";
 import { SideBarBtn } from "./SideBarBtn";
-import AddCircleIcon from "@mui/icons-material/AddCircle";
 import { Outlet } from "react-router";
 import { useLogoutUserMutation } from "../redux/apis/UserDetails";
 import { useDispatch } from "react-redux";
 import { Loading } from "./Loading";
 import { useNavigate } from "react-router";
 import { logoutUser } from "../redux/features/UserDetailsSlice";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import PersonAddAltIcon from "@mui/icons-material/PersonAddAlt";
 
 const drawerWidth = 240;
 
@@ -208,11 +209,11 @@ export function Navbar() {
           </DrawerHeader>
           <Divider />
           <List>
-            <SideBarBtn label={"Add Vendor"} link={"/admin/create-vendor"}>
-              <AddCircleIcon />
-            </SideBarBtn>
             <SideBarBtn label={"Vendors"} link={"/admin/vendor"}>
-              <AddCircleIcon />
+              <AccountBalanceIcon />
+            </SideBarBtn>
+            <SideBarBtn label={"Users"} link={"/users"}>
+              <PersonAddAltIcon />
             </SideBarBtn>
           </List>
         </Drawer>

@@ -4,21 +4,28 @@ import { useLoginUserMutation } from "../redux/apis/UserDetails";
 import { useNavigate } from "react-router";
 import { Header } from "../components/Header";
 import { Loading } from "../components/Loading";
+import Alert from "@mui/material/Alert";
 
 export const LoginPage = () => {
   const [userLoginForm, setUserLoginForm] = useState({
     email: "",
     password: "",
   });
-  const [errors, setErrors] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+    genricMsg: "",
+  });
+  const [showAlertPopUp, setShowAlertPopUp] = useState(false);
 
   const [loginUser, { isLoading }] = useLoginUserMutation();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setShowAlertPopUp(false);
     let showValidations = false;
-    let newErrors = { email: "", password: "" };
+    let newErrors = { email: "", password: "", genricMsg: "" };
 
     if (!userLoginForm.email.trim()) {
       newErrors.email = "Email is requried";
@@ -37,7 +44,7 @@ export const LoginPage = () => {
       setErrors(newErrors);
       return;
     } else {
-      setErrors({ email: "", password: "" });
+      setErrors({ email: "", password: "", genricMsg: "" });
     }
 
     //Login User
@@ -45,13 +52,14 @@ export const LoginPage = () => {
       await loginUser(userLoginForm).unwrap();
       navigate("/dashboard");
     } catch (e) {
+      console.log("The error is ", e);
+      setUserLoginForm({ ...userLoginForm, password: "" });
+      setShowAlertPopUp(true);
       newErrors = { email: "", password: "" };
-
-      if (e?.data?.email) {
-        newErrors.email = e?.data?.email;
-      } else {
-        newErrors.email = e?.data?.message;
-        newErrors.password = e?.data?.message;
+      if (e?.error) {
+        newErrors.genricMsg = e.error;
+      } else if (e?.data?.message) {
+        newErrors.genricMsg = e.data.message;
       }
 
       setErrors(newErrors);
@@ -63,6 +71,26 @@ export const LoginPage = () => {
       {isLoading && <Loading />}
 
       <Header />
+      {(errors.genricMsg || showAlertPopUp) && (
+        <Box
+          sx={{
+            position: "fixed",
+            left: 0,
+            width: "100vw",
+            display: "flex",
+            justifyContent: "center",
+            zIndex: 1300,
+          }}
+        >
+          <Alert
+            severity="error"
+            onClose={() => setShowAlertPopUp(false)}
+            sx={{ width: "auto" }}
+          >
+            {errors.genricMsg}
+          </Alert>
+        </Box>
+      )}
       <Box
         display={"flex"}
         marginTop={5}

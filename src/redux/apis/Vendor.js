@@ -30,11 +30,51 @@ export const VendorAPI = createApi({
           uuid: createUuid(),
         },
       }),
+      providesTags: ["vendors"],
     }),
 
     getSpecificVendorDetails: builder.query({
       query: (id) => ({
         url: `/vendor/${id}`,
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Authorization: localStorage.getItem("accessToken"),
+          uuid: createUuid(),
+        },
+      }),
+      providesTags: ["vendors"],
+    }),
+
+    updateVendorDetails: builder.mutation({
+      query: ({ id, vendorUpdateForm }) => ({
+        url: `/vendor/${id}`,
+        method: "PUT",
+        credentials: "include",
+        body: vendorUpdateForm,
+        headers: {
+          Authorization: localStorage.getItem("accessToken"),
+          uuid: createUuid(),
+        },
+      }),
+      invalidatesTags: ["vendors"],
+    }),
+
+    vendorDropDown: builder.query({
+      query: () => ({
+        url: "/vendor/drop-down",
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Authorization: localStorage.getItem("accessToken"),
+          uuid: createUuid(),
+        },
+      }),
+    }),
+
+    vendorBranches: builder.query({
+      query: (id) => ({
+        url: `vendor/branches/${id}`,
         method: "GET",
         credentials: "include",
         headers: {
@@ -50,4 +90,7 @@ export const {
   useCreateVendorMutation,
   useGetAllVendorsQuery,
   useGetSpecificVendorDetailsQuery,
+  useUpdateVendorDetailsMutation,
+  useVendorDropDownQuery,
+  useVendorBranchesQuery,
 } = VendorAPI;

@@ -6,8 +6,27 @@ import {
   Divider,
   Button,
 } from "@mui/material";
+import { forwardRef, useImperativeHandle, useState } from "react";
+import { useNavigate } from "react-router";
 
-export const SuccessDialog = ({ msg, open, close }) => {
+export const SuccessDialog = forwardRef((props, ref) => {
+  const [open, setOpen] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
+  const [link, setLink] = useState("/");
+  const navigate = useNavigate();
+
+  useImperativeHandle(ref, () => ({
+    openModal: () => setOpen(true),
+    closeModal: () => setOpen(false),
+    setSuccessMsg: (msg, link) => {
+      setSuccessMsg(msg);
+      setLink(link);
+    },
+    navigateTo: (link) => {
+      navigate(link);
+    },
+  }));
+
   return (
     <>
       <Dialog
@@ -23,7 +42,7 @@ export const SuccessDialog = ({ msg, open, close }) => {
         <DialogTitle textAlign={"center"}>Success</DialogTitle>
         <Divider />
         <DialogContent>
-          <p style={{ color: "green" }}>{msg}</p>
+          <p style={{ color: "green" }}>{successMsg}</p>
         </DialogContent>
         <DialogActions
           sx={{
@@ -35,7 +54,10 @@ export const SuccessDialog = ({ msg, open, close }) => {
             variant="contained"
             color="success"
             sx={{ px: 5 }}
-            onClick={close}
+            onClick={() => {
+              setOpen(false);
+              navigate(link);
+            }}
           >
             Close
           </Button>
@@ -43,4 +65,4 @@ export const SuccessDialog = ({ msg, open, close }) => {
       </Dialog>
     </>
   );
-};
+});

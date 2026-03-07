@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Divider,
   Paper,
   Table,
@@ -15,9 +16,13 @@ import IconButton from "@mui/material/IconButton";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { Navigate, useNavigate } from "react-router";
 import { ErrorDialog } from "../components/ErrorDialog";
+import AddIcon from "@mui/icons-material/Add";
 
 export const Vendor = () => {
-  const { data = [], isLoading } = useGetAllVendorsQuery();
+  const { data = [], isLoading } = useGetAllVendorsQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
+  console.log("is loading ", isLoading);
   const navigate = useNavigate();
 
   const viewSpecificVendor = (id) => {
@@ -33,6 +38,19 @@ export const Vendor = () => {
       </Typography>
       <Divider />
       <Box height={40} />
+
+      <Box display="flex" justifyContent="flex-end" mb={3} mr={3}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          sx={{ color: "white", fontWeight: "600" }}
+          onClick={() => {
+            navigate("/admin/create-vendor");
+          }}
+        >
+          Add New Vendor
+        </Button>
+      </Box>
 
       <Table component={Paper}>
         <Table>

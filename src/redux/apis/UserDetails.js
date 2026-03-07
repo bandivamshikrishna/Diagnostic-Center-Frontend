@@ -55,7 +55,29 @@ export const userDetailsAPI = createApi({
         },
       }),
     }),
-    transformResponse: (response) => response,
+    getUserRoles: builder.query({
+      query: () => ({
+        url: "/user/get-Roles",
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Authorization: localStorage.getItem("accessToken"),
+          uuid: createUuid(),
+        },
+      }),
+    }),
+    createUser: builder.mutation({
+      query: (createUser) => ({
+        url: "/user/create",
+        method: "POST",
+        body: createUser,
+        credentials: "include",
+        headers: {
+          Authorization: localStorage.getItem("accessToken"),
+          uuid: createUuid(),
+        },
+      }),
+    }),
   }),
 });
 
@@ -64,4 +86,6 @@ export const {
   useGetCurrentUserDetailsQuery,
   useLazyGetUserNewAccessTokenQuery,
   useLogoutUserMutation,
+  useGetUserRolesQuery,
+  useCreateUserMutation,
 } = userDetailsAPI;

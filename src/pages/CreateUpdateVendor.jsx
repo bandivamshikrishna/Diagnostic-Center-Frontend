@@ -20,10 +20,13 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import AddIcon from "@mui/icons-material/Add";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { useCreateVendorMutation } from "../redux/apis/Vendor";
+import {
+  useCreateVendorMutation,
+  useUpdateVendorDetailsMutation,
+} from "../redux/apis/Vendor";
 import { Loading } from "../components/Loading";
 import dayjs from "dayjs";
 import { ErrorDialog } from "../components/ErrorDialog";
@@ -32,18 +35,17 @@ import { useParams } from "react-router";
 import { useGetSpecificVendorDetailsQuery } from "../redux/apis/Vendor";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useNavigate } from "react-router";
+import Switch from "@mui/material/Switch";
 
 dayjs.extend(customParseFormat);
 
-export const CreateVendor = () => {
+export const CreateUpdateVendor = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dataUpdated, setDataUpdated] = useState(false);
   const [branchDetails, setBranchDetails] = useState([]);
   const [actionType, setActionType] = useState("");
-  const [errorList, setErrorList] = useState([]);
-  const [errorDialogOpen, SetErrorDialogOpen] = useState(false);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [index, setIndex] = useState(0);
@@ -51,11 +53,16 @@ export const CreateVendor = () => {
   const [filePreviewURL, setFilePreviewURL] = useState(null);
   let createVendorData;
   const [createVendor, { isLoading }] = useCreateVendorMutation();
+  const [updateVendor, { isLoading: isUpdateVendorLoading }] =
+    useUpdateVendorDetailsMutation();
   const {
     data,
     isLoading: isLoadingSpecificVendor,
     isSuccess,
-  } = useGetSpecificVendorDetailsQuery(id, { skip: !id });
+  } = useGetSpecificVendorDetailsQuery(id, {
+    skip: !id,
+    refetchOnMountOrArgChange: true,
+  });
   const [vendor, setVendor] = useState({
     name: "",
     email: "",
@@ -63,8 +70,11 @@ export const CreateVendor = () => {
     phoneNumber: "",
     activationEndDate: null,
     maxNoOfUsers: "",
+    active: false,
     branches: [],
   });
+
+  const errorModalRef = useRef();
 
   useEffect(() => {
     if (isSuccess && !dataUpdated) {
@@ -75,6 +85,7 @@ export const CreateVendor = () => {
         phoneNumber: data.phoneNumber,
         activationEndDate: dayjs(data.activationEndDate, "DD-MM-YYYY"),
         maxNoOfUsers: data.maxNoOfUsers,
+        active: data.active,
         branches: data.branches.map((branch, index) => ({
           ...branch,
           sNo: index + 1,
@@ -103,6 +114,10 @@ export const CreateVendor = () => {
       setFile(uploadedFile);
       setFilePreviewURL(URL.createObjectURL(uploadedFile));
     }
+  };
+
+  const handleActive = (e) => {
+    setVendor({ ...vendor, active: e.target.checked });
   };
 
   useEffect(() => {
@@ -263,10 +278,8 @@ export const CreateVendor = () => {
     }
     if (showValidations) {
       setVendorErrors(newVendorErrors);
-      setErrorList(newErrorList);
-      if (newErrorList.length > 0) {
-        SetErrorDialogOpen(true);
-      }
+      errorModalRef.current.addError(newErrorList);
+      errorModalRef.current.openModal(true);
     } else {
       newVendorErrors = {
         name: "",
@@ -283,7 +296,7 @@ export const CreateVendor = () => {
         activationEndDate: dayjs(vendor.activationEndDate).format("YYYY-MM-DD"),
         branches: branchDetails,
       };
-
+      console.log("The data is ", createVendorData);
       createVendorFormData.append("logo", e.target.logo.files[0]);
       createVendorFormData.append(
         "data",
@@ -293,7 +306,12 @@ export const CreateVendor = () => {
       );
 
       try {
-        const response = await createVendor(createVendorFormData).unwrap();
+        const response = await (!id
+          ? createVendor(createVendorFormData).unwrap()
+          : updateVendor({
+              id: id,
+              vendorUpdateForm: createVendorFormData,
+            }).unwrap());
         setSuccessMsg(response?.message);
         setSuccessDialogOpen(true);
         setVendor({
@@ -303,6 +321,7 @@ export const CreateVendor = () => {
           phoneNumber: "",
           activationEndDate: null,
           maxNoOfUsers: "",
+          active: false,
           branches: [],
         });
         setBranchDetails([]);
@@ -330,26 +349,25 @@ export const CreateVendor = () => {
           newErrorList[len] = e?.data?.email;
         }
         setVendorErrors(newVendorErrors);
-        setErrorList(newErrorList);
-        if (newErrorList.length > 0) {
-          SetErrorDialogOpen(true);
-        }
+        errorModalRef.current.addError(newErrorList);
+        errorModalRef.current.openModal(true);
       }
     }
   };
 
   return (
     <>
-      {(isLoading || isLoadingSpecificVendor) && <Loading />}
-      <ErrorDialog
-        open={errorDialogOpen}
-        close={() => SetErrorDialogOpen(false)}
-        errorList={errorList}
-      />
+      {(isLoading || isLoadingSpecificVendor || isUpdateVendorLoading) && (
+        <Loading />
+      )}
+      <ErrorDialog ref={errorModalRef} />
 
       <SuccessDialog
         open={successDialogOpen}
-        close={() => setSuccessDialogOpen(false)}
+        close={() => {
+          setSuccessDialogOpen(false);
+          navigate("/admin/vendor");
+        }}
         msg={successMsg}
       />
 
@@ -435,7 +453,7 @@ export const CreateVendor = () => {
               />
             </LocalizationProvider>
           </Grid>
-          <Grid size={{ xs: 4 }}>
+          <Grid size={{ xs: 3 }}>
             <Button
               variant="contained"
               component="label"
@@ -454,6 +472,10 @@ export const CreateVendor = () => {
                 Selected File: {file.name}
               </Typography>
             )}
+          </Grid>
+          <Grid size={{ xs: 1 }}>
+            <Typography>Active</Typography>
+            <Switch checked={vendor.active} onChange={handleActive} />
           </Grid>
 
           <Grid size={{ xs: 8 }}>

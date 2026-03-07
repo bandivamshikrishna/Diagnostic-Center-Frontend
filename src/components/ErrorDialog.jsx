@@ -6,8 +6,20 @@ import {
   Divider,
   Button,
 } from "@mui/material";
+import { forwardRef, useImperativeHandle, useState } from "react";
 
-export const ErrorDialog = ({ errorList, open, close }) => {
+export const ErrorDialog = forwardRef((props, ref) => {
+  const [open, setOpen] = useState(false);
+  const [errorList, setErrorList] = useState([]);
+
+  useImperativeHandle(ref, () => ({
+    openModal: () => setOpen(true),
+    closeModal: () => setOpen(false),
+    addError: (msg) => {
+      setErrorList(msg);
+    },
+  }));
+
   return (
     <>
       <Dialog
@@ -39,7 +51,7 @@ export const ErrorDialog = ({ errorList, open, close }) => {
             variant="contained"
             color="error"
             sx={{ px: 5 }}
-            onClick={close}
+            onClick={() => setOpen(false)}
           >
             Close
           </Button>
@@ -47,4 +59,4 @@ export const ErrorDialog = ({ errorList, open, close }) => {
       </Dialog>
     </>
   );
-};
+});
