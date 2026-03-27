@@ -23,6 +23,7 @@ function App() {
           <Route path="/admin/vendor/:id/" element={<CreateUpdateVendor />} />
           <Route path="/admin/create-vendor" element={<CreateUpdateVendor />} />
           <Route path="/create-user/" element={<CreateOrUpdateUser />} />
+          <Route path="/user/:id/" element={<CreateOrUpdateUser />} />
           <Route path="/users" element={<Users />} />
         </Route>
       </Route>

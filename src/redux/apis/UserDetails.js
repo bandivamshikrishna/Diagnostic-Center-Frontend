@@ -78,6 +78,38 @@ export const userDetailsAPI = createApi({
         },
       }),
     }),
+    getUsers: builder.query({
+      query: (filters) => {
+        const params = new URLSearchParams();
+
+        for (const key in filters) {
+          if (filters[key] !== null && filters[key] !== "") {
+            params.append(key, filters[key]);
+          }
+        }
+
+        return {
+          url: `/user?${params.toString()}`,
+          method: "GET",
+          credentials: "include",
+          headers: {
+            Authorization: localStorage.getItem("accessToken"),
+            uuid: createUuid(),
+          },
+        };
+      },
+    }),
+    getSpecificUserDetails: builder.query({
+      query: (id) => ({
+        url: "",
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Authorization: localStorage.getItem("accessToken"),
+          uuid: createUuid(),
+        },
+      }),
+    }),
   }),
 });
 
@@ -88,4 +120,5 @@ export const {
   useLogoutUserMutation,
   useGetUserRolesQuery,
   useCreateUserMutation,
+  useGetUsersQuery,
 } = userDetailsAPI;

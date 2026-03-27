@@ -14,6 +14,8 @@ export const SingleSelect = ({
   options = [],
   error = false,
   helperText = "",
+  disabled,
+  customHeight,
 }) => {
   return (
     <>
@@ -25,6 +27,8 @@ export const SingleSelect = ({
           onChange={onChange}
           label={label}
           name={name}
+          disabled={disabled}
+          sx={{ height: customHeight || "" }}
         >
           {options.map((option) => (
             <MenuItem key={option.name} name={option.name} value={option.name}>
