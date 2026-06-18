@@ -1,79 +1,55 @@
 import { Outlet } from "react-router";
-import {
-  useGetCurrentUserDetailsQuery,
-  useLazyGetUserNewAccessTokenQuery,
-} from "../redux/apis/UserDetails";
+import { useGetCurrentUserDetailsQuery } from "../redux/apis/UserDetails";
 import { useDispatch } from "react-redux";
-import { skipToken } from "@reduxjs/toolkit/query";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Loading } from "./Loading";
-import { logoutUser, setUserDetails } from "../redux/features/UserDetailsSlice";
+import {
+  logoutUser,
+  setUserDetails,
+  setAuthChecked,
+} from "../redux/features/UserSlice";
 import { useNavigate } from "react-router";
 import { useSelector } from "react-redux";
 
 export const ProtectedLayout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const { isAuthChecked } = useSelector((state) => state.UserSlice);
+  const { email } = useSelector((state) => state.UserSlice?.user);
   const accessToken = localStorage.getItem("accessToken");
-  const user = useSelector((state) => state.userDetails.user?.email);
 
-  let showLoading = false;
-  const callAPI = !accessToken || !user;
-  console.log("The call api", callAPI);
-  const [refreshing, setRefreshing] = useState(false);
-  const { data, isLoading, refetch, isError, error, isSuccess } =
-    useGetCurrentUserDetailsQuery(callAPI ? "" : skipToken);
+  console.log("the value of isAuthChecked", isAuthChecked);
 
-  const [
-    triggerRefresh,
-    {
-      isLoading: isRefreshingLoading,
-      isSuccess: isRefreshSuccess,
-      isError: isRefreshError,
-    },
-  ] = useLazyGetUserNewAccessTokenQuery();
+  const { data, isLoading, error } = useGetCurrentUserDetailsQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+    skip: isAuthChecked && email != "",
+  });
+  console.log("The data in the protected layout is  ", data);
+  useEffect(() => {
+    if (data) {
+      dispatch(setAuthChecked(true));
+      dispatch(setUserDetails(data));
+    }
+  }, [data, dispatch]);
 
   useEffect(() => {
-    const handleRefresh = async () => {
-      if (refreshing) return;
-      setRefreshing(true);
-
-      try {
-        await triggerRefresh().unwrap();
-        console.log("refresh api called");
-        refetch();
-      } catch (e) {
-        console.log("the error is", e);
-        dispatch(logoutUser());
-        navigate("/login", { replace: true });
-      }
-    };
-
-    if (isSuccess && data) {
-      dispatch(setUserDetails(data));
-    } else if ((isError && error?.status == "403") || !accessToken) {
-      handleRefresh();
-    } else if (isError) {
-      console.log("The error is ", error);
+    if (
+      error?.status === 401 ||
+      accessToken == null ||
+      accessToken == undefined ||
+      accessToken == ""
+    ) {
+      dispatch(logoutUser());
+      dispatch(setAuthChecked(true));
+      navigate("/login", { replace: true });
     }
-  }, [
-    dispatch,
-    data,
-    triggerRefresh,
-    refreshing,
-    isRefreshSuccess,
-    refetch,
-    isRefreshError,
-    navigate,
-    accessToken,
-    isRefreshingLoading,
-    isSuccess,
-    error,
-    isError,
-  ]);
+  }, [error, dispatch, navigate, accessToken]);
 
-  showLoading = isLoading || isRefreshingLoading;
-
-  if (showLoading) return <Loading />;
-  return <Outlet />;
+  return (
+    <>
+      {isLoading && <Loading />}
+      <Outlet />
+    </>
+  );
 };

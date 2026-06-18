@@ -37,15 +37,15 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import dayjs from "dayjs";
 
-export const Users = () => {
+export const MedicalTests = () => {
   //variables
   const navigate = useNavigate();
   const EMPTY_SEARCH_FILTERS = {
     filterType: 1,
     ID: "",
-    fullName: "",
-    email: "",
-    role: "",
+    category: "",
+    testName: "",
+    department: "",
     startDate: null,
     endDate: null,
     sortBy: null,
@@ -308,10 +308,10 @@ export const Users = () => {
           startIcon={<AddIcon />}
           sx={{ color: "white", fontWeight: "600" }}
           onClick={() => {
-            navigate("/admin/create-user/");
+            navigate("/admin/create-medical-test");
           }}
         >
-          Create New User
+          Create New Medical Test
         </Button>
       </Box>
       <Table component={Paper}>

@@ -5,10 +5,15 @@ import { Dashboard } from "./pages/Dashboard";
 import { CreateUpdateVendor } from "./pages/CreateUpdateVendor";
 import { Vendor } from "./pages/Vendor";
 import "./App.css";
-import { Navbar } from "./components/Navbar";
 import { ProtectedLayout } from "./components/ProtectedLayout";
 import { CreateOrUpdateUser } from "./pages/CreateOrUpdateUser";
 import { Users } from "./pages/Users";
+import { Patients } from "./pages/Patients";
+import { CreateOrUpdatePatient } from "./pages/CreateOrUpdatePatient";
+import { MedicalTests } from "./pages/MedicalTests";
+import { CreateOrUpdateMedicalTests } from "./pages/CreateOrUpdateMedicalTests";
+import { Sidebar } from "./components/SideBar";
+import Sidebar2 from "./pages/Sidebar2";
 
 function App() {
   return (
@@ -17,14 +22,24 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
 
       <Route element={<ProtectedLayout />}>
-        <Route element={<Navbar />}>
+        <Route element={<Sidebar />}>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/admin/vendor" element={<Vendor />} />
+          <Route path="/admin/vendors" element={<Vendor />} />
           <Route path="/admin/vendor/:id/" element={<CreateUpdateVendor />} />
           <Route path="/admin/create-vendor" element={<CreateUpdateVendor />} />
-          <Route path="/create-user/" element={<CreateOrUpdateUser />} />
+          <Route path="/admin/create-user/" element={<CreateOrUpdateUser />} />
           <Route path="/user/:id/" element={<CreateOrUpdateUser />} />
-          <Route path="/users" element={<Users />} />
+          <Route path="/admin/users" element={<Users />} />
+
+          <Route path="/admin/medical-tests" element={<MedicalTests />} />
+          <Route
+            path="/admin/create-medical-test"
+            element={<CreateOrUpdateMedicalTests />}
+          />
+
+          <Route path="/patients" element={<Patients />} />
+          <Route path="/create-patient" element={<CreateOrUpdatePatient />} />
+          <Route path="/sample2" element={<Sidebar2 />} />
         </Route>
       </Route>
     </Routes>

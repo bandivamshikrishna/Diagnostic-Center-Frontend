@@ -366,7 +366,7 @@ export const CreateUpdateVendor = () => {
         open={successDialogOpen}
         close={() => {
           setSuccessDialogOpen(false);
-          navigate("/admin/vendor");
+          navigate("/admin/vendors");
         }}
         msg={successMsg}
       />
@@ -663,7 +663,7 @@ export const CreateUpdateVendor = () => {
                   color="error"
                   sx={{ px: 5 }}
                   onClick={() => {
-                    navigate("/admin/vendor");
+                    navigate("/admin/vendors");
                   }}
                 >
                   Cancel

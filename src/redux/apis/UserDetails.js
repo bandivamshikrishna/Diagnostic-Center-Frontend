@@ -1,11 +1,10 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import { v4 as createUuid } from "uuid";
+import { baseQueryWithReauth } from "./baseQuery";
 
 export const userDetailsAPI = createApi({
   reducerPath: "userDetailsAPI",
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${import.meta.env.VITE_API_BASE_URL}`,
-  }),
+  baseQuery: baseQueryWithReauth,
   endpoints: (builder) => ({
     loginUser: builder.mutation({
       query: (userLoginData) => ({
@@ -31,19 +30,7 @@ export const userDetailsAPI = createApi({
         },
       }),
     }),
-    getUserNewAccessToken: builder.query({
-      query: () => ({
-        url: "/user/refreshToken",
-        method: "GET",
-        credentials: "include",
-      }),
-      transformResponse: async (response, meta) => {
-        const accessToken = meta.response.headers.get("Authorization");
-        if (accessToken) {
-          localStorage.setItem("accessToken", accessToken);
-        }
-      },
-    }),
+
     logoutUser: builder.mutation({
       query: () => ({
         url: "/user/logout",
@@ -54,6 +41,9 @@ export const userDetailsAPI = createApi({
           uuid: createUuid(),
         },
       }),
+      transformResponse: () => {
+        localStorage.removeItem("accessToken");
+      },
     }),
     getUserRoles: builder.query({
       query: () => ({
@@ -98,10 +88,11 @@ export const userDetailsAPI = createApi({
           },
         };
       },
+      providesTags: ["users"],
     }),
     getSpecificUserDetails: builder.query({
       query: (id) => ({
-        url: "",
+        url: `user/${id}`,
         method: "GET",
         credentials: "include",
         headers: {
@@ -109,6 +100,45 @@ export const userDetailsAPI = createApi({
           uuid: createUuid(),
         },
       }),
+      providesTags: (result, error, id) => [{ type: "User", id }],
+    }),
+    activateOrDeActivateUser: builder.mutation({
+      query: (id) => ({
+        url: `user/activateOrDeactivate/${id}`,
+        method: "POST",
+        credentials: "include",
+        headers: {
+          Authorization: localStorage.getItem("accessToken"),
+          uuid: createUuid(),
+        },
+      }),
+    }),
+    unLockUser: builder.mutation({
+      query: (id) => ({
+        url: `user/unLock/${id}`,
+        method: "POST",
+        credentials: "include",
+        headers: {
+          Authorization: localStorage.getItem("accessToken"),
+          uuid: createUuid(),
+        },
+      }),
+    }),
+    updateUser: builder.mutation({
+      query: ({ id, user }) => ({
+        url: `user/update/${id}`,
+        method: "PUT",
+        body: user,
+        credentials: "include",
+        headers: {
+          Authorization: localStorage.getItem("accessToken"),
+          uuid: createUuid(),
+        },
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: "User", id },
+        "Users",
+      ],
     }),
   }),
 });
@@ -116,9 +146,12 @@ export const userDetailsAPI = createApi({
 export const {
   useLoginUserMutation,
   useGetCurrentUserDetailsQuery,
-  useLazyGetUserNewAccessTokenQuery,
   useLogoutUserMutation,
   useGetUserRolesQuery,
   useCreateUserMutation,
   useGetUsersQuery,
+  useActivateOrDeActivateUserMutation,
+  useUnLockUserMutation,
+  useGetSpecificUserDetailsQuery,
+  useUpdateUserMutation,
 } = userDetailsAPI;

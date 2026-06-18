@@ -9,6 +9,8 @@ import {
 import {
   useGetUserRolesQuery,
   useCreateUserMutation,
+  useGetSpecificUserDetailsQuery,
+  useUpdateUserMutation,
 } from "../redux/apis/UserDetails";
 import { useEffect, useRef, useState } from "react";
 import { ErrorDialog } from "../components/ErrorDialog";
@@ -19,7 +21,9 @@ import { useSelector } from "react-redux";
 
 export const CreateOrUpdateUser = () => {
   //variables
-  const userVendor = useSelector((state) => state.userDetails.user?.vendor);
+  const userVendor = useSelector(
+    (state) => state.UserSlice?.vendor?.vendorName,
+  );
   const EMPTY_USER = {
     fullName: "",
     email: "",
@@ -42,7 +46,8 @@ export const CreateOrUpdateUser = () => {
   const useSuccessRef = useRef();
   const navigate = useNavigate();
   const { id } = useParams();
-  const userRole = useSelector((state) => state.userDetails.user?.role);
+  const userRole = useSelector((state) => state.UserSlice.user?.role);
+  const [dataUpdated, setDataUpdated] = useState(false);
 
   //api's
   const { data: vendorsList } = useVendorDropDownQuery(undefined, {
@@ -55,6 +60,16 @@ export const CreateOrUpdateUser = () => {
     });
   const { data: rolesList } = useGetUserRolesQuery();
   const [createUser, { isLoading }] = useCreateUserMutation();
+  const {
+    data: specificUserDetails,
+    isLoading: isLoadingSpecificUserDetails,
+    isSuccess: isSuccessSpecificUserDetails,
+  } = useGetSpecificUserDetailsQuery(id, {
+    skip: !id,
+    refetchOnMountOrArgChange: true,
+  });
+  const [updateUser, { isLoading: updateUserLoading }] =
+    useUpdateUserMutation();
 
   //functions
   useEffect(() => {
@@ -72,6 +87,20 @@ export const CreateOrUpdateUser = () => {
       return () => clearTimeout(timer);
     }
   }, [user.vendor, refetchVendorBranches]);
+
+  useEffect(() => {
+    if (isSuccessSpecificUserDetails && !dataUpdated) {
+      setUser({
+        fullName: specificUserDetails.fullName,
+        email: specificUserDetails.email,
+        role: specificUserDetails.role,
+        vendor: specificUserDetails.vendor,
+        vendorBranch: specificUserDetails.vendorBranch,
+      });
+      setDataUpdated(true);
+      console.log("user data updated");
+    }
+  }, [isSuccessSpecificUserDetails, dataUpdated, specificUserDetails]);
 
   const handleUserChange = (e) => {
     setUser({
@@ -119,8 +148,13 @@ export const CreateOrUpdateUser = () => {
       useErrorRef.current.openModal(true);
     } else {
       try {
-        const response = await createUser(user).unwrap();
-        useSuccessRef.current.setSuccessMsg(response.message, "/users");
+        const response = await (!id
+          ? createUser(user).unwrap()
+          : updateUser({
+              id: id,
+              user,
+            }).unwrap());
+        useSuccessRef.current.setSuccessMsg(response.message, "/admin/users");
         useSuccessRef.current.openModal();
         setUser({ ...EMPTY_USER });
         setUserErrors({ ...EMPTY_USER_ERRORS });
@@ -134,11 +168,13 @@ export const CreateOrUpdateUser = () => {
 
   return (
     <>
-      {isLoading && <Loading />}
+      {(isLoading || isLoadingSpecificUserDetails || updateUserLoading) && (
+        <Loading />
+      )}
       <ErrorDialog ref={useErrorRef} />
       <SuccessDialog ref={useSuccessRef} />
       <Typography variant="h4" textAlign={"center"}>
-        Create User
+        {(!id ? "Create" : "Update") + " User"}
       </Typography>
       <Divider />
       <Box height={20} />
@@ -146,6 +182,7 @@ export const CreateOrUpdateUser = () => {
         <Grid container spacing={5}>
           <Grid size={4}>
             <TextField
+              size="small"
               label="Full Name"
               name="fullName"
               value={user.fullName}
@@ -157,6 +194,7 @@ export const CreateOrUpdateUser = () => {
           </Grid>
           <Grid size={4}>
             <TextField
+              size="small"
               label="email"
               type="email"
               name="email"
@@ -211,14 +249,14 @@ export const CreateOrUpdateUser = () => {
               type="submit"
               sx={{ px: 5 }}
             >
-              Submit
+              {!id ? "Submit" : "Update"}
             </Button>
             <Button
               variant="contained"
               color="error"
               sx={{ px: 5 }}
               onClick={() => {
-                navigate("/users");
+                navigate("/admin/users");
               }}
             >
               Cancel

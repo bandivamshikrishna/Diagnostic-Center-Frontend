@@ -56,7 +56,8 @@ export const SuccessDialog = forwardRef((props, ref) => {
             sx={{ px: 5 }}
             onClick={() => {
               setOpen(false);
-              navigate(link);
+              if (link != null && link != undefined && link != "")
+                navigate(link);
             }}
           >
             Close

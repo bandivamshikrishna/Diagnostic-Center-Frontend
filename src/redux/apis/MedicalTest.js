@@ -2,26 +2,25 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import { v4 as createUuid } from "uuid";
 import { baseQueryWithReauth } from "./baseQuery";
 
-export const VendorAPI = createApi({
-  reducerPath: "VendorAPI",
+export const MedicalTestAPI = createApi({
+  reducerPath: "MedicalTestAPI",
   baseQuery: baseQueryWithReauth,
   endpoints: (builder) => ({
-    createVendor: builder.mutation({
-      query: (createVendorFormData) => ({
-        url: "/admin/vendor",
+    createMedicalTest: builder.mutation({
+      query: (medicalTest) => ({
+        url: "/medicaltest",
         method: "POST",
         credentials: "include",
-        body: createVendorFormData,
+        body: medicalTest,
         headers: {
           Authorization: localStorage.getItem("accessToken"),
           uuid: createUuid(),
         },
       }),
     }),
-
-    getAllVendors: builder.query({
+    getMedicalTestDepartmentLovs: builder.query({
       query: () => ({
-        url: "/admin/vendor",
+        url: "medicaltest/lovs/departments",
         method: "GET",
         credentials: "include",
         headers: {
@@ -29,39 +28,10 @@ export const VendorAPI = createApi({
           uuid: createUuid(),
         },
       }),
-      providesTags: ["vendors"],
     }),
-
-    getSpecificVendorDetails: builder.query({
-      query: (id) => ({
-        url: `/admin/vendor/${id}`,
-        method: "GET",
-        credentials: "include",
-        headers: {
-          Authorization: localStorage.getItem("accessToken"),
-          uuid: createUuid(),
-        },
-      }),
-      providesTags: ["vendors"],
-    }),
-
-    updateVendorDetails: builder.mutation({
-      query: ({ id, vendorUpdateForm }) => ({
-        url: `/admin/vendor/${id}`,
-        method: "PUT",
-        credentials: "include",
-        body: vendorUpdateForm,
-        headers: {
-          Authorization: localStorage.getItem("accessToken"),
-          uuid: createUuid(),
-        },
-      }),
-      invalidatesTags: ["vendors"],
-    }),
-
-    vendorDropDown: builder.query({
+    getMedicalTestCategoriesLovs: builder.query({
       query: () => ({
-        url: "/admin/vendor/drop-down",
+        url: "medicaltest/lovs/categories",
         method: "GET",
         credentials: "include",
         headers: {
@@ -70,10 +40,31 @@ export const VendorAPI = createApi({
         },
       }),
     }),
-
-    vendorBranches: builder.query({
-      query: (id) => ({
-        url: `admin/vendor/branches/${id}`,
+    getMedicalTestMethodsLovs: builder.query({
+      query: () => ({
+        url: "medicaltest/lovs/methods",
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Authorization: localStorage.getItem("accessToken"),
+          uuid: createUuid(),
+        },
+      }),
+    }),
+    getMedicalTestSpecimensLovs: builder.query({
+      query: () => ({
+        url: "medicaltest/lovs/specimens",
+        method: "GET",
+        credentials: "include",
+        headers: {
+          Authorization: localStorage.getItem("accessToken"),
+          uuid: createUuid(),
+        },
+      }),
+    }),
+    getMedicalTestUnitsLovs: builder.query({
+      query: () => ({
+        url: "medicaltest/lovs/units",
         method: "GET",
         credentials: "include",
         headers: {
@@ -86,10 +77,10 @@ export const VendorAPI = createApi({
 });
 
 export const {
-  useCreateVendorMutation,
-  useGetAllVendorsQuery,
-  useGetSpecificVendorDetailsQuery,
-  useUpdateVendorDetailsMutation,
-  useVendorDropDownQuery,
-  useVendorBranchesQuery,
-} = VendorAPI;
+  useCreateMedicalTestMutation,
+  useGetMedicalTestDepartmentLovsQuery,
+  useGetMedicalTestCategoriesLovsQuery,
+  useGetMedicalTestMethodsLovsQuery,
+  useGetMedicalTestSpecimensLovsQuery,
+  useGetMedicalTestUnitsLovsQuery
+} = MedicalTestAPI;

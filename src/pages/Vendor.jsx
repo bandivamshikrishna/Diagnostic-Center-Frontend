@@ -32,11 +32,6 @@ export const Vendor = () => {
   return (
     <>
       {isLoading && <Loading />}
-
-      <Typography variant="h4" textAlign={"center"}>
-        Vendor Details
-      </Typography>
-      <Divider />
       <Box height={40} />
 
       <Box display="flex" justifyContent="flex-end" mb={3} mr={3}>

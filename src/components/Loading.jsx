@@ -12,7 +12,7 @@ export const Loading = () => {
         display="flex"
         justifyContent="center"
         alignItems="center"
-        bgcolor="rgba(255, 255, 255, 0.7)"
+        // bgcolor="rgba(255, 255, 255, 0.7)"
         zIndex={9999}
       >
         <CircularProgress />

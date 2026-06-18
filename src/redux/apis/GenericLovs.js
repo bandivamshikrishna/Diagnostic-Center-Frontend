@@ -1,11 +1,10 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi } from "@reduxjs/toolkit/query/react";
 import { v4 as createUuid } from "uuid";
+import { baseQueryWithReauth } from "./baseQuery";
 
 export const GenericLovsAPI = createApi({
   reducerPath: "GenericLovsAPI",
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${import.meta.env.VITE_API_BASE_URL}`,
-  }),
+  baseQuery: baseQueryWithReauth,
   endpoints: (builder) => ({
     getSearchFilters: builder.query({
       query: (type) => ({
