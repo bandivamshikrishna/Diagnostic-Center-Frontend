@@ -18,9 +18,9 @@ export const MedicalTestAPI = createApi({
         },
       }),
     }),
-    getMedicalTestDepartmentLovs: builder.query({
-      query: () => ({
-        url: "medicaltest/lovs/departments",
+    getMedicalTestLovs: builder.query({
+      query: (type) => ({
+        url: `medicaltest/lovs?type=${type}`,
         method: "GET",
         credentials: "include",
         headers: {
@@ -29,10 +29,31 @@ export const MedicalTestAPI = createApi({
         },
       }),
     }),
-    getMedicalTestCategoriesLovs: builder.query({
-      query: () => ({
-        url: "medicaltest/lovs/categories",
-        method: "GET",
+    getMedicalTests: builder.query({
+      query: (filters) => {
+        const params = new URLSearchParams();
+
+        for (const key in filters) {
+          if (filters[key] !== null && filters[key] !== "") {
+            params.append(key, filters[key]);
+          }
+        }
+
+        return {
+          url: `/medicaltest?${params.toString()}`,
+          method: "GET",
+          credentials: "include",
+          headers: {
+            Authorization: localStorage.getItem("accessToken"),
+            uuid: createUuid(),
+          },
+        };
+      },
+    }),
+    activateOrDeActivateMedicalTest: builder.mutation({
+      query: (id) => ({
+        url: `medicaltest/activateOrDeactivate/${id}`,
+        method: "POST",
         credentials: "include",
         headers: {
           Authorization: localStorage.getItem("accessToken"),
@@ -40,9 +61,9 @@ export const MedicalTestAPI = createApi({
         },
       }),
     }),
-    getMedicalTestMethodsLovs: builder.query({
-      query: () => ({
-        url: "medicaltest/lovs/methods",
+    getSpecificMedicalTestDetails: builder.query({
+      query: (id) => ({
+        url: `medicaltest/${id}`,
         method: "GET",
         credentials: "include",
         headers: {
@@ -50,37 +71,32 @@ export const MedicalTestAPI = createApi({
           uuid: createUuid(),
         },
       }),
+      providesTags: (result, error, id) => [{ type: "Test", id }],
     }),
-    getMedicalTestSpecimensLovs: builder.query({
-      query: () => ({
-        url: "medicaltest/lovs/specimens",
-        method: "GET",
+    updateMedicalTest: builder.mutation({
+      query: ({ id, test }) => ({
+        url: `medicaltest/${id}`,
+        method: "PUT",
+        body: test,
         credentials: "include",
         headers: {
           Authorization: localStorage.getItem("accessToken"),
           uuid: createUuid(),
         },
       }),
-    }),
-    getMedicalTestUnitsLovs: builder.query({
-      query: () => ({
-        url: "medicaltest/lovs/units",
-        method: "GET",
-        credentials: "include",
-        headers: {
-          Authorization: localStorage.getItem("accessToken"),
-          uuid: createUuid(),
-        },
-      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Test", id },
+        "Tests",
+      ],
     }),
   }),
 });
 
 export const {
   useCreateMedicalTestMutation,
-  useGetMedicalTestDepartmentLovsQuery,
-  useGetMedicalTestCategoriesLovsQuery,
-  useGetMedicalTestMethodsLovsQuery,
-  useGetMedicalTestSpecimensLovsQuery,
-  useGetMedicalTestUnitsLovsQuery
+  useGetMedicalTestLovsQuery,
+  useGetMedicalTestsQuery,
+  useActivateOrDeActivateMedicalTestMutation,
+  useGetSpecificMedicalTestDetailsQuery,
+  useUpdateMedicalTestMutation
 } = MedicalTestAPI;

@@ -14,6 +14,7 @@ import { MedicalTests } from "./pages/MedicalTests";
 import { CreateOrUpdateMedicalTests } from "./pages/CreateOrUpdateMedicalTests";
 import { Sidebar } from "./components/SideBar";
 import Sidebar2 from "./pages/Sidebar2";
+import { ManageTests } from "./pages/ManageTests";
 
 function App() {
   return (
@@ -36,8 +37,13 @@ function App() {
             path="/admin/create-medical-test"
             element={<CreateOrUpdateMedicalTests />}
           />
+          <Route
+            path="/admin/medical-test/:id/"
+            element={<CreateOrUpdateMedicalTests />}
+          />
 
           <Route path="/patients" element={<Patients />} />
+          <Route path="/manage-tests" element={<ManageTests />} />
           <Route path="/create-patient" element={<CreateOrUpdatePatient />} />
           <Route path="/sample2" element={<Sidebar2 />} />
         </Route>

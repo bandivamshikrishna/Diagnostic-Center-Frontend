@@ -49,6 +49,7 @@ export function Sidebar() {
   const [logout, { isLoading }] = useLogoutUserMutation();
   const userFullName = useSelector((state) => state.UserSlice.user.fullName);
   const userRole = useSelector((state) => state.UserSlice.role.roleName);
+  const userRoleCode = useSelector((state) => state.UserSlice.role.roleCode);
   const location = useLocation();
 
   const [anchorEl, setAnchorEl] = useState(null);
@@ -74,16 +75,42 @@ export function Sidebar() {
   };
 
   const menus = [
-    { name: "Vendors", icon: <AccountBalanceIcon />, link: "/admin/vendors" },
-    { name: "Users", icon: <People />, link: "/admin/users" },
+    {
+      name: "Vendors",
+      icon: <AccountBalanceIcon />,
+      link: "/admin/vendors",
+      roles: ["AD"],
+    },
+    { name: "Users", icon: <People />, link: "/admin/users", roles: ["AD"] },
     {
       name: "Tests",
       icon: <LocalHospitalIcon />,
       link: "/admin/medical-tests",
+      roles: ["AD"],
     },
-    { name: "Settings", icon: <Settings />, link: "/" },
+    {
+      name: "Patients",
+      icon: <People />,
+      link: "/patients",
+      roles: ["LSV", "LT"],
+    },
+    {
+      name: "Manage Tests",
+      icon: <LocalHospitalIcon />,
+      link: "/manage-tests",
+      roles: ["LSV", "LT"],
+    },
+    {
+      name: "Settings",
+      icon: <Settings />,
+      link: "/",
+      roles: ["AD", "LSV", "LT"],
+    },
   ];
   const activeMenu = menus.find((m) => location.pathname === m.link);
+  const allowedMenus = menus.filter((menu) =>
+    menu.roles.includes(userRoleCode),
+  );
 
   const sidebarWidth = open ? drawerWidth : collapsedWidth;
 
@@ -138,7 +165,7 @@ export function Sidebar() {
           }}
         >
           <Avatar sx={{ bgcolor: "#2563eb", width: 55, height: 55 }}>
-            {userFullName.charAt(0)}
+            {userFullName.charAt(0).toUpperCase()}
           </Avatar>
 
           {open && (
@@ -155,7 +182,7 @@ export function Sidebar() {
 
         {/* MENU */}
         <List sx={{ p: 2 }}>
-          {menus.map((menu) => (
+          {allowedMenus.map((menu) => (
             <ListItemButton
               key={menu.name}
               onClick={() => {
@@ -233,7 +260,7 @@ export function Sidebar() {
             <Tooltip title="Open Settings">
               <IconButton onClick={handleUserOpenMenu}>
                 <Avatar sx={{ bgcolor: "#2563eb" }}>
-                  {userFullName.charAt(0)}
+                  {userFullName.charAt(0).toUpperCase()}
                 </Avatar>
               </IconButton>
             </Tooltip>

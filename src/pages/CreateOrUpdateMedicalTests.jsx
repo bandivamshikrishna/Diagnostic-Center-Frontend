@@ -9,19 +9,17 @@ import {
   Typography,
 } from "@mui/material";
 import { SingleSelect } from "../components/SingleSelect";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { ErrorDialog } from "../components/ErrorDialog";
 import { SuccessDialog } from "../components/SuccessDialog";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import { useCreateMedicalTestMutation } from "../redux/apis/MedicalTest";
 import { Loading } from "../components/Loading";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import {
-  useGetMedicalTestDepartmentLovsQuery,
-  useGetMedicalTestCategoriesLovsQuery,
-  useGetMedicalTestMethodsLovsQuery,
-  useGetMedicalTestSpecimensLovsQuery,
-  useGetMedicalTestUnitsLovsQuery,
+  useGetMedicalTestLovsQuery,
+  useGetSpecificMedicalTestDetailsQuery,
+  useUpdateMedicalTestMutation,
 } from "../redux/apis/MedicalTest";
 
 export const CreateOrUpdateMedicalTests = () => {
@@ -32,7 +30,6 @@ export const CreateOrUpdateMedicalTests = () => {
     panelName: "",
     panelYesOrNo: "N",
     testName: "",
-    testCode: "",
     specimen: "",
     method: "",
     normalRange: "",
@@ -46,7 +43,6 @@ export const CreateOrUpdateMedicalTests = () => {
     panelName: "",
     panelYesOrNo: "",
     testName: "",
-    testCode: "",
     specimen: "",
     method: "",
     normalRange: "",
@@ -69,16 +65,28 @@ export const CreateOrUpdateMedicalTests = () => {
   const successRef = useRef();
   const errorRef = useRef();
   const navigate = useNavigate();
+  const { id } = useParams();
   const [openDepartmentDialog, setOpenDepartmentDialog] = useState(false);
+  const [dataUpdated, setDataUpdated] = useState(false);
 
   //apis
   const [createMedicalTest, { isLoading: isCreateMedicalTestLoading }] =
     useCreateMedicalTestMutation();
-  const { data: departmentsList } = useGetMedicalTestDepartmentLovsQuery();
-  const { data: categoriesList } = useGetMedicalTestCategoriesLovsQuery();
-  const { data: methodsList } = useGetMedicalTestMethodsLovsQuery();
-  const { data: specimensList } = useGetMedicalTestSpecimensLovsQuery();
-  const { data: unitsList } = useGetMedicalTestUnitsLovsQuery();
+  const [updateMedicalTest, { isLoading: updateMedicalTestLoading }] =
+    useUpdateMedicalTestMutation();
+  const {
+    data: specificMedicalTestDetails,
+    isLoading: isLoadingSpecificTestDetails,
+    isSuccess: isSuccessSpecificTestDetails,
+  } = useGetSpecificMedicalTestDetailsQuery(id, {
+    skip: !id,
+    refetchOnMountOrArgChange: true,
+  });
+  const { data: departmentsList } = useGetMedicalTestLovsQuery("DEPARTMENTS");
+  const { data: categoriesList } = useGetMedicalTestLovsQuery("CATEGORIES");
+  const { data: methodsList } = useGetMedicalTestLovsQuery("METHODS");
+  const { data: specimensList } = useGetMedicalTestLovsQuery("SPECIMENS");
+  const { data: unitsList } = useGetMedicalTestLovsQuery("UNITS");
 
   //functions
   const handleMedicalTestChange = (e) => {
@@ -87,6 +95,24 @@ export const CreateOrUpdateMedicalTests = () => {
       [e.target.name]: e.target.value,
     });
   };
+
+  useEffect(() => {
+    if (isSuccessSpecificTestDetails && !dataUpdated) {
+      setMedicalTest({
+        department: specificMedicalTestDetails.department,
+        category: specificMedicalTestDetails.category,
+        panelName: specificMedicalTestDetails.panelName,
+        panelYesOrNo: specificMedicalTestDetails.isPanel ? "Y" : "N",
+        testName: specificMedicalTestDetails.testName,
+        specimen: specificMedicalTestDetails.specimen,
+        method: specificMedicalTestDetails.method,
+        normalRange: specificMedicalTestDetails.normalRange,
+        unit: specificMedicalTestDetails.unit,
+      });
+      setDataUpdated(true);
+      console.log("user data updated");
+    }
+  }, [isSuccessSpecificTestDetails, dataUpdated, specificMedicalTestDetails]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -98,7 +124,6 @@ export const CreateOrUpdateMedicalTests = () => {
       panelName: "Please Enter Panel Name",
       panelYesOrNo: "Please Select Is Panel",
       testName: "Please Enter Test Name",
-      testCode: "Please Enter Test Code",
       specimen: "Please Enter Specimen",
       method: "Please Enter Method",
       normalRange: "Please Enter Normal Range",
@@ -119,7 +144,6 @@ export const CreateOrUpdateMedicalTests = () => {
         }
       }
     });
-
     setErrors(newErrors);
     if (errorList.length > 0) {
       errorRef.current.addError(errorList);
@@ -139,8 +163,16 @@ export const CreateOrUpdateMedicalTests = () => {
         panel: medicalTest.panel === "Yes",
       };
       setMedicalTest(finalMedicalTest);
-      const response = await createMedicalTest(finalMedicalTest).unwrap();
-      successRef.current.setSuccessMsg(response.message, "/medical-tests");
+      const response = await (!id
+        ? createMedicalTest(finalMedicalTest).unwrap()
+        : updateMedicalTest({
+            id: id,
+            test: finalMedicalTest,
+          }).unwrap());
+      successRef.current.setSuccessMsg(
+        response.message,
+        "/admin/medical-tests",
+      );
       successRef.current.openModal();
       setMedicalTest({ ...EMPTY_MEDICAL_TEST });
       setErrors({ ...EMPTY_ERRORS });
@@ -156,10 +188,12 @@ export const CreateOrUpdateMedicalTests = () => {
     <>
       <ErrorDialog ref={errorRef} />
       <SuccessDialog ref={successRef} />
-      {isCreateMedicalTestLoading && <Loading />}
+      {(isCreateMedicalTestLoading ||
+        isLoadingSpecificTestDetails ||
+        updateMedicalTestLoading) && <Loading />}
       <Box position="relative" width="100%">
         <Typography variant="h4" textAlign="center">
-          Create New Medical Test
+          {(!id ? "Create" : "Update") + " Medical Test"}
         </Typography>
 
         <Box

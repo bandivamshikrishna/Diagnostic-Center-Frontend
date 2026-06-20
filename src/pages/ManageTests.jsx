@@ -36,7 +36,7 @@ import {
   useActivateOrDeActivateMedicalTestMutation,
 } from "../redux/apis/MedicalTest";
 
-export const MedicalTests = () => {
+export const ManageTests = () => {
   //variables
   const navigate = useNavigate();
   const EMPTY_SEARCH_FILTERS = {

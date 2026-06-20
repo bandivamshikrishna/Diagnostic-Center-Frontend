@@ -19,13 +19,11 @@ export const ProtectedLayout = () => {
   const { email } = useSelector((state) => state.UserSlice?.user);
   const accessToken = localStorage.getItem("accessToken");
 
-  console.log("the value of isAuthChecked", isAuthChecked);
 
   const { data, isLoading, error } = useGetCurrentUserDetailsQuery(undefined, {
     refetchOnMountOrArgChange: true,
     skip: isAuthChecked && email != "",
   });
-  console.log("The data in the protected layout is  ", data);
   useEffect(() => {
     if (data) {
       dispatch(setAuthChecked(true));
