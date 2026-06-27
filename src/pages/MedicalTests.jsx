@@ -188,10 +188,10 @@ export const MedicalTests = () => {
             <TextField
               size="small"
               label="Test Name"
-              name="name"
-              value={searchFilters.name}
+              name="testName"
+              value={searchFilters.testName}
               onChange={handleSearchFilters}
-              disabled={activeField !== null && activeField !== "name"}
+              disabled={activeField !== null && activeField !== "testName"}
               sx={{ width: "100%" }}
             />
           </Grid>

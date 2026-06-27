@@ -16,37 +16,27 @@ import {
   TableFooter,
   Menu,
   MenuItem,
+  Checkbox,
 } from "@mui/material";
 import { Loading } from "../components/Loading";
 import { ErrorDialog } from "../components/ErrorDialog";
 import { SuccessDialog } from "../components/SuccessDialog";
-import AddIcon from "@mui/icons-material/Add";
-import { useNavigate } from "react-router";
-import { useGetSearchFiltersQuery } from "../redux/apis/GenericLovs";
 import { SingleSelect } from "../components/SingleSelect";
 import { useEffect, useRef, useState } from "react";
-import { DatePicker, LocalizationProvider } from "@mui/x-date-pickers";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import dayjs from "dayjs";
 import {
   useGetMedicalTestLovsQuery,
-  useGetMedicalTestsQuery,
-  useActivateOrDeActivateMedicalTestMutation,
+  useGetMedicalTestsOfVendorQuery,
+  useSaveMedicalTestsOfVendorMutation,
 } from "../redux/apis/MedicalTest";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import SaveIcon from "@mui/icons-material/Save";
 
 export const ManageTests = () => {
   //variables
-  const navigate = useNavigate();
   const EMPTY_SEARCH_FILTERS = {
-    filterType: 1,
-    ID: "",
     category: "",
     testName: "",
     department: "",
-    startDate: null,
-    endDate: null,
     sortBy: null,
     sortDirection: null,
     pageNo: 0,
@@ -59,57 +49,56 @@ export const ManageTests = () => {
   const [debounceSearchFilters, setDebounceSearchFilters] =
     useState(searchFilters);
   const [activeField, setActiveField] = useState(null);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const useSuccessRef = useRef();
-  const useErrorRef = useRef();
+  const successRef = useRef();
+  const errorRef = useRef();
+  const [selectedTestsMap, setSelectedTestsMap] = useState({});
 
   //apis
   const {
     data: medicalTestsList = [],
     isLoading,
     isFetching,
-    refetch: fetchUpdatedMedicalTests,
-  } = useGetMedicalTestsQuery(debounceSearchFilters, {
+    refetch: fetchUpdatedVendorTests,
+  } = useGetMedicalTestsOfVendorQuery(debounceSearchFilters, {
     refetchOnMountOrArgChange: true,
   });
-  const [
-    activateOrDeActivateTest,
-    { isLoading: isActivateOrDeActivateTestLoading },
-  ] = useActivateOrDeActivateMedicalTestMutation();
-  const { data: filterTypes = [1] } = useGetSearchFiltersQuery("SA");
+  const [saveVendorTests, { isLoading: saveVendorTestLoading }] =
+    useSaveMedicalTestsOfVendorMutation();
+  const tests = medicalTestsList?.content || [];
   const { data: departmentsList } = useGetMedicalTestLovsQuery("DEPARTMENTS");
   const { data: categoriesList } = useGetMedicalTestLovsQuery("CATEGORIES");
 
   //functions
   useEffect(() => {
     const handler = setTimeout(() => {
-      if (activeField === "date") {
-        if (!searchFilters.startDate || !searchFilters.endDate) {
-          return;
-        }
-      }
       setDebounceSearchFilters({
         ...searchFilters,
-        startDate: searchFilters.startDate
-          ? dayjs(searchFilters.startDate).format("DD-MM-YYYY")
-          : null,
-        endDate: searchFilters.endDate
-          ? dayjs(searchFilters.endDate).format("DD-MM-YYYY")
-          : null,
       });
     }, 500);
 
     return () => clearTimeout(handler);
   }, [searchFilters, activeField]);
 
-  const viewSpecificUsersDetails = (id) => {
-    navigate(`/admin/medical-test/${id}`);
-  };
+  useEffect(() => {
+    if (medicalTestsList?.content) {
+      setSelectedTestsMap((prev) => {
+        const updated = { ...prev };
+
+        medicalTestsList.content.forEach((test) => {
+          if (!updated[test.id]) {
+            updated[test.id] = {
+              selected: test.selected || false,
+              price: test.testPrice || 0,
+            };
+          }
+        });
+        return updated;
+      });
+    }
+  }, [medicalTestsList]);
 
   const handleSearchFilters = (e) => {
     if (
-      e.target.name !== "filterType" &&
       e.target.name !== "sortBy" &&
       e.target.name !== "sortDirection" &&
       e.target.name !== "pageNo" &&
@@ -119,36 +108,53 @@ export const ManageTests = () => {
     setSearchFilters({ ...searchFilters, [e.target.name]: e.target.value });
   };
 
-  const handleMedicalTestOpenMenu = (e, user) => {
-    setAnchorEl(e.currentTarget);
-    setSelectedUser(user);
+  const handleSelect = (id, checked) => {
+    setSelectedTestsMap((prev) => ({
+      ...prev,
+      [id]: {
+        selected: checked,
+        price: checked ? prev[id]?.price || 0 : 0,
+      },
+    }));
   };
 
-  const handleMedicalTestCloseMenu = () => {
-    setAnchorEl(null);
+  const handlePriceChange = (id, value) => {
+    setSelectedTestsMap((prev) => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        price: value === "" ? 0 : Number(value),
+      },
+    }));
   };
 
-  const activateOrDeActivateSelectedTest = async () => {
-    handleMedicalTestCloseMenu();
+  const handleSave = async () => {
+    const payload = Object.entries(selectedTestsMap)
+      .filter(([_, v]) => v.selected)
+      .map(([id, v]) => ({
+        testID: Number(id),
+        testPrice: v.price,
+      }));
+
     try {
-      const response = await activateOrDeActivateTest(selectedUser.id).unwrap();
-      useSuccessRef.current.setSuccessMsg(response.message, "");
-      useSuccessRef.current.openModal();
-      fetchUpdatedMedicalTests();
+      const response = await saveVendorTests(payload).unwrap();
+      successRef.current.setSuccessMsg(response.message, "/manage-tests");
+      successRef.current.openModal();
+      fetchUpdatedVendorTests();
     } catch (e) {
       let errorList = e?.data?.errorMessages;
-      useErrorRef.current.addError(errorList);
-      useErrorRef.current.openModal();
+      errorRef.current.addError(errorList);
+      errorRef.current.openModal(true);
     }
+
+    // await saveVendorTests(payload);
   };
 
   return (
     <>
-      {(isLoading || isFetching || isActivateOrDeActivateTestLoading) && (
-        <Loading />
-      )}
-      <SuccessDialog ref={useSuccessRef} />
-      <ErrorDialog ref={useErrorRef} />
+      {(isLoading || isFetching || saveVendorTestLoading) && <Loading />}
+      <SuccessDialog ref={successRef} />
+      <ErrorDialog ref={errorRef} />
       <Box position="relative" width="100%">
         <Box
           position="absolute"
@@ -157,41 +163,20 @@ export const ManageTests = () => {
           bottom={0}
           display="flex"
           alignItems="center"
-        >
-          <Box width={150}>
-            <SingleSelect
-              name="filterType"
-              options={filterTypes}
-              value={searchFilters.filterType}
-              onChange={handleSearchFilters}
-              customHeight={40}
-            />
-          </Box>
-        </Box>
+        ></Box>
       </Box>
 
       <Box height={40} />
       <Box mx={3}>
         <Grid container spacing={5}>
-          <Grid size={3} xs={12} md={3}>
-            <TextField
-              size="small"
-              label="ID"
-              name="ID"
-              value={searchFilters.ID}
-              onChange={handleSearchFilters}
-              disabled={activeField !== null && activeField !== "ID"}
-              sx={{ width: "100%" }}
-            />
-          </Grid>
-          <Grid size={3}>
+          <Grid size={6}>
             <TextField
               size="small"
               label="Test Name"
-              name="name"
-              value={searchFilters.name}
+              name="testName"
+              value={searchFilters.testName}
               onChange={handleSearchFilters}
-              disabled={activeField !== null && activeField !== "name"}
+              disabled={activeField !== null && activeField !== "testName"}
               sx={{ width: "100%" }}
             />
           </Grid>
@@ -217,50 +202,6 @@ export const ManageTests = () => {
               sx={{ width: "100%" }}
             />
           </Grid>
-          <Grid size={3}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DatePicker
-                label="Start Date"
-                format="DD-MM-YYYY"
-                name="startDate"
-                value={searchFilters.startDate}
-                disabled={activeField !== null && activeField !== "date"}
-                onChange={(newValue) => {
-                  setSearchFilters({ ...searchFilters, startDate: newValue });
-                  setActiveField(newValue ? "date" : null);
-                }}
-                sx={{ width: "100%" }}
-                slotProps={{
-                  textField: {
-                    size: "small",
-                    fullWidth: true,
-                  },
-                }}
-              />
-            </LocalizationProvider>
-          </Grid>
-          <Grid size={3}>
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DatePicker
-                label="End Date"
-                format="DD-MM-YYYY"
-                name="endDate"
-                value={searchFilters.endDate}
-                disabled={activeField !== null && activeField !== "date"}
-                onChange={(newValue) => {
-                  setSearchFilters({ ...searchFilters, endDate: newValue });
-                  setActiveField(newValue ? "date" : null);
-                }}
-                sx={{ width: "100%" }}
-                slotProps={{
-                  textField: {
-                    size: "small",
-                    fullWidth: true,
-                  },
-                }}
-              />
-            </LocalizationProvider>
-          </Grid>
         </Grid>
       </Box>
       <Box
@@ -285,76 +226,77 @@ export const ManageTests = () => {
         </Button>
         <Button
           variant="contained"
-          startIcon={<AddIcon />}
+          color="success"
+          startIcon={<SaveIcon />}
+          onClick={handleSave}
           sx={{ color: "white", fontWeight: "600" }}
-          onClick={() => {
-            navigate("/admin/create-medical-test");
-          }}
         >
-          Create New Medical Test
+          Save Changes
         </Button>
       </Box>
       <Table component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontWeight: "bold" }}>ID</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}></TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Test Name</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Department</TableCell>
               <TableCell sx={{ fontWeight: "bold" }}>Category</TableCell>
-              <TableCell sx={{ fontWeight: "bold" }}>More Options</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Price</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {medicalTestsList?.content?.map((test, index) => (
-              <TableRow
-                key={index}
-                onClick={() => {
-                  viewSpecificUsersDetails(test.id);
-                }}
-                hover
-                sx={{
-                  cursor: "pointer",
-                }}
-              >
-                <TableCell>{test.testCode}</TableCell>
-                <TableCell>{test.testName}</TableCell>
-                <TableCell>{test.department}</TableCell>
-                <TableCell>{test.category}</TableCell>
-                <TableCell>
-                  <IconButton
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleMedicalTestOpenMenu(e, test);
-                    }}
-                  >
-                    <MoreVertIcon />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
+            {tests.map((test) => {
+              const state = selectedTestsMap[test.id] || {
+                selected: false,
+                price: 0,
+              };
+              return (
+                <TableRow key={test.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={state.selected}
+                      onChange={(e) => handleSelect(test.id, e.target.checked)}
+                    />
+                  </TableCell>
+                  <TableCell>{test.testName}</TableCell>
+                  <TableCell>{test.department}</TableCell>
+                  <TableCell>{test.category}</TableCell>
+                  <TableCell>
+                    <TextField
+                      type="number"
+                      size="small"
+                      name="price"
+                      value={state.selected ? test.testPrice : 0}
+                      disabled={!state.selected}
+                      onChange={(e) => {
+                        handlePriceChange(test.id, e.target.value);
+                      }}
+                      sx={{
+                        backgroundColor: state.selected ? "white" : "#f5f5f5",
+                        borderRadius: 1,
+                        "& .MuiInputBase-input.Mui-disabled": {
+                          WebkitTextFillColor: "#777",
+                        },
+                      }}
+                      inputProps={{
+                        step: "0.01",
+                        min: 0,
+                      }}
+                    />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleMedicalTestCloseMenu}
-          >
-            <MenuItem
-              onClick={activateOrDeActivateSelectedTest}
-              sx={{ textAlign: "center" }}
-            >
-              <Typography variant="body1">
-                {selectedUser?.active ? "De-Activate Test" : "Activate Test"}
-              </Typography>
-            </MenuItem>
-          </Menu>
+
           <TableFooter>
             <TableRow>
               <TablePagination
                 rowsPerPageOptions={[5, 10, 25, 50, 100]}
                 page={searchFilters.pageNo}
-                rowsPerPage={searchFilters.pageSize}
                 count={medicalTestsList?.totalElements}
+                rowsPerPage={searchFilters.pageSize}
                 onPageChange={(e, newPage) => {
                   setSearchFilters({ ...searchFilters, pageNo: newPage });
                 }}

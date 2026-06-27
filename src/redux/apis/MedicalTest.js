@@ -49,6 +49,7 @@ export const MedicalTestAPI = createApi({
           },
         };
       },
+      providesTags: ["Tests"],
     }),
     activateOrDeActivateMedicalTest: builder.mutation({
       query: (id) => ({
@@ -89,6 +90,44 @@ export const MedicalTestAPI = createApi({
         "Tests",
       ],
     }),
+    getMedicalTestsOfVendor: builder.query({
+      query: (filters) => {
+        const params = new URLSearchParams();
+
+        for (const key in filters) {
+          if (filters[key] !== null && filters[key] !== "") {
+            params.append(key, filters[key]);
+          }
+        }
+
+        return {
+          url: `/medicaltest/manage-tests?${params.toString()}`,
+          method: "GET",
+          credentials: "include",
+          headers: {
+            Authorization: localStorage.getItem("accessToken"),
+            uuid: createUuid(),
+          },
+        };
+      },
+      providesTags: ["manageTests"],
+    }),
+    saveMedicalTestsOfVendor: builder.mutation({
+      query: (tests) => ({
+        url: `/medicaltest/manage-tests`,
+        method: "POST",
+        body: tests,
+        credentials: "include",
+        headers: {
+          Authorization: localStorage.getItem("accessToken"),
+          uuid: createUuid(),
+        },
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: "Test", id },
+        "manageTests",
+      ],
+    }),
   }),
 });
 
@@ -98,5 +137,7 @@ export const {
   useGetMedicalTestsQuery,
   useActivateOrDeActivateMedicalTestMutation,
   useGetSpecificMedicalTestDetailsQuery,
-  useUpdateMedicalTestMutation
+  useUpdateMedicalTestMutation,
+  useGetMedicalTestsOfVendorQuery,
+  useSaveMedicalTestsOfVendorMutation,
 } = MedicalTestAPI;

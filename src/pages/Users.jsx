@@ -208,10 +208,10 @@ export const Users = () => {
             <TextField
               size="small"
               label="Name"
-              name="name"
-              value={searchFilters.name}
+              name="fullName"
+              value={searchFilters.fullName}
               onChange={handleSearchFilters}
-              disabled={activeField !== null && activeField !== "name"}
+              disabled={activeField !== null && activeField !== "fullName"}
               sx={{ width: "100%" }}
             />
           </Grid>
